@@ -62,12 +62,16 @@ function makePageForEpisodes(episodeList) {
   credit.innerHTML = `Data originally from <a href="https://tvmaze.com/" target="_blank" rel="noopener noreferrer">TVMaze.com</a>`;
   rootElem.appendChild(credit);
 }
+function render() {
+  const filteredFilms = state.films.filter(function (film) {});
 
-const filteredFilms = state.films.filter(function (film) {
-  return film.title.toLowerCase().includes(state.searchTerm.toLowerCase());
-});
-const filmCards = filteredFilms.map(createFilmCard);
-document.getElementById("film-container").append(...filmCards);
+  const filmCards = filteredFilms.map(createFilmCard);
+  document.getElementById("film-container").innerHTML = filmCards.join("");
+}
+render();
+
+const input = document.getElementById("input");
+input.addEventListener("input", function (event) {});
 
 function setup() {
   const episodes = getAllEpisodes();
