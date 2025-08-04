@@ -65,13 +65,26 @@ function makePageForEpisodes(episodeList) {
 
 function setupSearchInput(episodes) {
   const input = document.getElementById("search-input");
-  
+  const matchCount = document.getElementById("match-count");
+
+  input.addEventListener("input", function (event) {
+    const searchTerm = event.target.value.toLowerCase();
+    const filteredEpisodes = episodes.filter(
+      (episode) =>
+        episode.name.toLowerCase().includes(searchTerm) ||
+        episode.summary?.toLowerCase().includes(searchTerm)
+    );
+
+    makePageForEpisodes(filteredEpisodes);
+    matchCount.textContent = `${filteredEpisodes.length} of ${episodes.length} episodes match your search.`;
   });
+  matchCount.textContent = `${episodes.length} of ${episodes.length} episodes match your search.`;
 }
 
 function setup() {
   const episodes = getAllEpisodes();
   makePageForEpisodes(episodes);
+  setupSearchInput(episodes);
 }
 
 window.onload = setup;
