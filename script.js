@@ -76,6 +76,11 @@ function setupSearchInput(episodes) {
     );
 
     makePageForEpisodes(filteredEpisodes);
+    if (filteredEpisodes.length === 0) {
+      const noMatchMessage = document.createElement("p");
+      noMatchMessage.textContent = "No episodes match your search.";
+      document.getElementById("episodes-container").appendChild(noMatchMessage);
+    }
     matchCount.textContent = `${filteredEpisodes.length} of ${episodes.length} episodes match your search.`;
   });
   matchCount.textContent = `${episodes.length} of ${episodes.length} episodes match your search.`;
