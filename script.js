@@ -68,7 +68,7 @@ function setupSearchInput(episodes) {
   const matchCount = document.getElementById("match-count");
 
   input.addEventListener("input", function (event) {
-    const searchTerm = event.target.value.toLowerCase();
+    const searchTerm = event.target.value.toLowerCase().trim();
     const filteredEpisodes = episodes.filter(
       (episode) =>
         episode.name.toLowerCase().includes(searchTerm) ||
