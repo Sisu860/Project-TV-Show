@@ -66,6 +66,8 @@ function makePageForEpisodes(episodeList) {
 const filteredFilms = state.films.filter(function (film) {
   return film.title.toLowerCase().includes(state.searchTerm.toLowerCase());
 });
+const filmCards = filteredFilms.map(createFilmCard);
+document.getElementById("film-container").append(...filmCards);
 
 function setup() {
   const episodes = getAllEpisodes();
