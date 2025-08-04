@@ -67,6 +67,10 @@ function setupSearchInput(episodes) {
   const input = document.getElementById("search-input");
   const matchCount = document.getElementById("match-count");
 
+  function update(filteredEpisodes) {
+    makePageForEpisodes(filteredEpisodes);
+    matchCount.textContent = `${filteredEpisodes.length} of ${episodes.length} episodes match your search.`;
+  }
   input.addEventListener("input", function (event) {
     const searchTerm = event.target.value.toLowerCase().trim();
     const filteredEpisodes = episodes.filter(
@@ -74,16 +78,9 @@ function setupSearchInput(episodes) {
         episode.name.toLowerCase().includes(searchTerm) ||
         episode.summary?.toLowerCase().includes(searchTerm)
     );
-
-    makePageForEpisodes(filteredEpisodes);
-    if (filteredEpisodes.length === 0) {
-      const noMatchMessage = document.createElement("p");
-      noMatchMessage.textContent = "No episodes match your search.";
-      document.getElementById("episodes-container").appendChild(noMatchMessage);
-    }
-    matchCount.textContent = `${filteredEpisodes.length} of ${episodes.length} episodes match your search.`;
+    update(filteredEpisodes);
   });
-  matchCount.textContent = `${episodes.length} of ${episodes.length} episodes match your search.`;
+  update(episodes);
 }
 
 function setup() {
