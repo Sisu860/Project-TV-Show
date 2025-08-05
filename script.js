@@ -69,21 +69,15 @@ function setupSearchInput(episodes) {
   const selectOptions = document.getElementById("episode-select");
   const showAllBtn = document.getElementById("show-all-button");
 
+  function pad(num) {
+    return num.toString().padStart(2, "0");
+  }
+
   function update(filteredEpisodes) {
     makePageForEpisodes(filteredEpisodes);
     matchCount.textContent = `${filteredEpisodes.length} of ${episodes.length} episodes match your search.`;
   }
-    // Update the select options
-    selectOptions.innerHTML = "";
-    filteredEpisodes.forEach((episode) => {
-      const option = document.createElement("option");
-      option.value = episode.id;
-      option.textContent = `${episode.name} (S${pad(episode.season)}E${pad(
-        episode.number
-      )})`;
-      selectOptions.appendChild(option);
-    });
-  }
+
   input.addEventListener("input", function (event) {
     const searchTerm = event.target.value.toLowerCase().trim();
     const filteredEpisodes = episodes.filter(
@@ -92,8 +86,11 @@ function setupSearchInput(episodes) {
         episode.summary?.toLowerCase().includes(searchTerm)
     );
     update(filteredEpisodes);
-    showAllBtn.style.display = filteredEpisodes.length < episodes.length ? "inline-block" : "none";
+    showAllBtn.style.display =
+      filteredEpisodes.length < episodes.length ? "inline-block" : "none";
+    selectOptions.value = "";
   });
+
   function populateSelectOptions() {
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
@@ -102,18 +99,20 @@ function setupSearchInput(episodes) {
 
     episodes.forEach((episode, index) => {
       const option = document.createElement("option");
-      const code = `S${episode.season.toString().padStart(2, "0")}E${episode.number.toString().padStart(2, "0")}`;
+      const code = `S${pad(episode.season)}E${pad(episode.number)}`;
       option.value = index;
-      option.textContent = `${episode.name} (${code})`;
+      option.textContent = `${code} - ${episode.name}`;
       selectOptions.appendChild(option);
     });
   }
   selectOptions.addEventListener("change", function (event) {
     const selectedIndex = event.target.value;
     if (selectedIndex === "") return;
+
     const selectedEpisode = [episodes[selectedIndex]];
     update(selectedEpisode);
     showAllBtn.style.display = "inline-block";
+    input.value = "";
   });
 
   showAllBtn.addEventListener("click", () => {
@@ -122,6 +121,7 @@ function setupSearchInput(episodes) {
     selectOptions.value = "";
     showAllBtn.style.display = "none";
   });
+
   populateSelectOptions();
   update(episodes);
 }
