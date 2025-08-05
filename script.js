@@ -66,10 +66,23 @@ function makePageForEpisodes(episodeList) {
 function setupSearchInput(episodes) {
   const input = document.getElementById("search-input");
   const matchCount = document.getElementById("match-count");
+  const selectOptions = document.getElementById("episode-select");
+  const showAllBtn = document.getElementById("show-all-button");
 
   function update(filteredEpisodes) {
     makePageForEpisodes(filteredEpisodes);
     matchCount.textContent = `${filteredEpisodes.length} of ${episodes.length} episodes match your search.`;
+  }
+    // Update the select options
+    selectOptions.innerHTML = "";
+    filteredEpisodes.forEach((episode) => {
+      const option = document.createElement("option");
+      option.value = episode.id;
+      option.textContent = `${episode.name} (S${pad(episode.season)}E${pad(
+        episode.number
+      )})`;
+      selectOptions.appendChild(option);
+    });
   }
   input.addEventListener("input", function (event) {
     const searchTerm = event.target.value.toLowerCase().trim();
@@ -79,6 +92,7 @@ function setupSearchInput(episodes) {
         episode.summary?.toLowerCase().includes(searchTerm)
     );
     update(filteredEpisodes);
+    showAllBtn.style.display = filteredEpisodes.length < episodes.length ? "inline-block" : "none";
   });
   update(episodes);
 }
