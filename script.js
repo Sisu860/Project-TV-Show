@@ -57,18 +57,28 @@ function makePageForEpisodes(episodeList) {
   });
 }
 
-function setup() {
-  const episodes = getAllEpisodes();
+function showMessage(message, isError = false) {
+  const rootElem = document.getElementById("root");
+  rootElem.innerHTML = "";
+  const msg = document.createElement("div");
+  msg.textContent = message;
+  msg.style.textAlign = "center";
+  msg.style.margin = "2em";
+  msg.style.fontSize = "1.2em";
+  msg.style.color = isError ? "red" : "#222";
+  rootElem.appendChild(msg);
+}
 
+function setup(episodes) {
   // Create top controls container
   const controls = document.createElement("div");
   controls.style.display = "flex";
-  controls.style.justifyContent = "flex-start"; // Align left
+  controls.style.justifyContent = "flex-start";
   controls.style.alignItems = "center";
   controls.style.gap = "1em";
   controls.style.margin = "1em";
 
-    // Episode select dropdown
+  // Episode select dropdown
   const select = document.createElement("select");
   select.id = "episode-select";
   select.style.padding = "0.5em";
@@ -139,4 +149,18 @@ function setup() {
   update(episodes);
 }
 
-window.onload = setup;
+// Fetch episodes from TVMaze API
+window.onload = function () {
+  showMessage("Loading episodes...");
+  fetch("https://api.tvmaze.com/shows/82/episodes")
+    .then((response) => {
+      if (!response.ok) throw new Error("Network response was not ok");
+      return response.json();
+    })
+    .then((episodes) => {
+      setup(episodes);
+    })
+    .catch((error) => {
+      showMessage("Error loading episodes. Please try again later.", true);
+    });
+};
