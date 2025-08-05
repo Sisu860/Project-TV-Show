@@ -94,6 +94,35 @@ function setupSearchInput(episodes) {
     update(filteredEpisodes);
     showAllBtn.style.display = filteredEpisodes.length < episodes.length ? "inline-block" : "none";
   });
+  function populateSelectOptions() {
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Select an episode...";
+    selectOptions.appendChild(defaultOption);
+
+    episodes.forEach((episode, index) => {
+      const option = document.createElement("option");
+      const code = `S${episode.season.toString().padStart(2, "0")}E${episode.number.toString().padStart(2, "0")}`;
+      option.value = index;
+      option.textContent = `${episode.name} (${code})`;
+      selectOptions.appendChild(option);
+    });
+  }
+  selectOptions.addEventListener("change", function (event) {
+    const selectedIndex = event.target.value;
+    if (selectedIndex === "") return;
+    const selectedEpisode = [episodes[selectedIndex]];
+    update(selectedEpisode);
+    showAllBtn.style.display = "inline-block";
+  });
+
+  showAllBtn.addEventListener("click", () => {
+    update(episodes);
+    input.value = "";
+    selectOptions.value = "";
+    showAllBtn.style.display = "none";
+  });
+  populateSelectOptions();
   update(episodes);
 }
 
