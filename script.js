@@ -78,13 +78,17 @@ function setup(shows, episodes = null) {
   controls.style.gap = "1em";
   controls.style.margin = "1em";
 
+  // Show select dropdown
   const showSelect = document.createElement("select");
   showSelect.id = "show-select";
+  showSelect.style.padding = "0.5em";
+  showSelect.style.fontSize = "1rem";
 
   const defaultShowOption = document.createElement("option");
   defaultShowOption.value = "";
   defaultShowOption.textContent = "Select a show...";
   showSelect.appendChild(defaultShowOption);
+
   shows.forEach((show) => {
     const option = document.createElement("option");
     option.value = show.id;
@@ -93,110 +97,105 @@ function setup(shows, episodes = null) {
   });
   controls.appendChild(showSelect);
 
-  // Episode select dropdown
-  const select = document.createElement("select");
+  // Only add episode-related controls if episodes exist
   if (episodes && episodes.length > 0) {
+    // Episode select dropdown
+    const select = document.createElement("select");
     select.id = "episode-select";
     select.style.padding = "0.5em";
     select.style.fontSize = "1rem";
     controls.appendChild(select);
-  }
 
-  // Search input for text
-  const input = document.createElement("input");
-  input.type = "text";
-  input.id = "search-input";
-  input.placeholder = "Search episodes...";
-  input.style.padding = "0.5em";
-  input.style.width = "250px";
-  input.style.fontSize = "1rem";
-  controls.appendChild(input);
+    // Search input for text
+    const input = document.createElement("input");
+    input.type = "text";
+    input.id = "search-input";
+    input.placeholder = "Search episodes...";
+    input.style.padding = "0.5em";
+    input.style.width = "250px";
+    input.style.fontSize = "1rem";
+    controls.appendChild(input);
 
-  // Populate select options
-  const defaultOption = document.createElement("option");
-  defaultOption.value = "";
-  defaultOption.textContent = "Select an episode...";
-  select.appendChild(defaultOption);
+    // Populate episode select options
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Select an episode...";
+    select.appendChild(defaultOption);
 
-  episodes.forEach((episode, idx) => {
-    const option = document.createElement("option");
-    option.value = idx;
-    option.textContent = `S${pad(episode.season)}E${pad(episode.number)} - ${
-      episode.name
-    }`;
-    select.appendChild(option);
-  });
+    episodes.forEach((episode, idx) => {
+      const option = document.createElement("option");
+      option.value = idx;
+      option.textContent = `S${pad(episode.season)}E${pad(episode.number)} - ${
+        episode.name
+      }`;
+      select.appendChild(option);
+    });
 
-  // Match count
-  const matchCount = document.createElement("span");
-  matchCount.id = "match-count";
-  matchCount.style.marginLeft = "1em";
-  matchCount.style.fontSize = "1rem";
-  controls.appendChild(matchCount);
+    // Match count
+    const matchCount = document.createElement("span");
+    matchCount.id = "match-count";
+    matchCount.style.marginLeft = "1em";
+    matchCount.style.fontSize = "1rem";
+    controls.appendChild(matchCount);
 
-  // Insert controls above the root element
-  const rootElem = document.getElementById("root");
-  rootElem.parentNode.insertBefore(controls, rootElem);
+    // Insert controls above the root element
+    const rootElem = document.getElementById("root");
+    rootElem.parentNode.insertBefore(controls, rootElem);
 
-  function update(filteredEpisodes) {
-    makePageForEpisodes(filteredEpisodes);
-    matchCount.textContent = `Displaying ${filteredEpisodes.length}/${episodes.length} episodes.`;
-  }
-
-  input.addEventListener("input", function (event) {
-    const searchTerm = event.target.value.toLowerCase().trim();
-    const filteredEpisodes = episodes.filter(
-      (episode) =>
-        episode.name.toLowerCase().includes(searchTerm) ||
-        episode.summary?.toLowerCase().includes(searchTerm)
-    );
-    update(filteredEpisodes);
-    select.value = "";
-  });
-
-  select.addEventListener("change", function (event) {
-    const selectedIndex = event.target.value;
-    if (selectedIndex === "") {
-      update(episodes);
-      return;
+    function update(filteredEpisodes) {
+      makePageForEpisodes(filteredEpisodes);
+      matchCount.textContent = `Displaying ${filteredEpisodes.length}/${episodes.length} episodes.`;
     }
-    const selectedEpisode = [episodes[selectedIndex]];
-    update(selectedEpisode);
-    input.value = "";
-  });
 
-  update(episodes);
+    input.addEventListener("input", function (event) {
+      const searchTerm = event.target.value.toLowerCase().trim();
+      const filteredEpisodes = episodes.filter(
+        (episode) =>
+          episode.name.toLowerCase().includes(searchTerm) ||
+          episode.summary?.toLowerCase().includes(searchTerm)
+      );
+      update(filteredEpisodes);
+      select.value = "";
+    });
+
+    select.addEventListener("change", function (event) {
+      const selectedIndex = event.target.value;
+      if (selectedIndex === "") {
+        update(episodes);
+        return;
+      }
+      const selectedEpisode = [episodes[selectedIndex]];
+      update(selectedEpisode);
+      input.value = "";
+    });
+
+    update(episodes);
+  } else {
+    // If no episodes, just add controls without episode-specific elements
+    const rootElem = document.getElementById("root");
+    rootElem.parentNode.insertBefore(controls, rootElem);
+  }
 }
 
 async function loadShows() {
   const response = await fetch("https://api.tvmaze.com/shows");
   if (!response.ok) throw new Error("Network response was not ok");
   const shows = await response.json();
-  shows.sort((a, b) => a.name.localeCompare(b.name));
+  shows.sort((a, b) =>
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+  );
   return shows;
 }
 
-console.error("Error fetching shows:", error);
-showMessage("Error loading shows. Please try again later.", true);
-
-// Fetch episodes from TVMaze API
-window.onload = function () {
-  showMessage("Loading episodes...");
-  fetch("https://api.tvmaze.com/shows/82/episodes")
-    .then((response) => {
-      if (!response.ok) throw new Error("Network response was not ok");
-      return response.json();
-    })
-    .then((episodes) => {
-      setup(episodes);
-    })
-    .catch((error) => {
-      showMessage("Error loading episodes. Please try again later.", true);
-    });
-
-  window.onload = async function () {
-    showMessage("Loading shows...");
+window.onload = async function () {
+  showMessage("Loading shows...");
+  try {
     const shows = await loadShows();
     setup(shows);
-  };
+    // Clear the loading message
+    const rootElem = document.getElementById("root");
+    rootElem.innerHTML = "";
+  } catch (error) {
+    showMessage("Error loading shows. Please try again later.", true);
+  }
 };
