@@ -69,7 +69,7 @@ function showMessage(message, isError = false) {
   rootElem.appendChild(msg);
 }
 
-function setup(episodes) {
+function setup(shows, episodes = null) {
   // Create top controls container
   const controls = document.createElement("div");
   controls.style.display = "flex";
@@ -78,12 +78,29 @@ function setup(episodes) {
   controls.style.gap = "1em";
   controls.style.margin = "1em";
 
+  const showSelect = document.createElement("select");
+  showSelect.id = "show-select";
+
+  const defaultShowOption = document.createElement("option");
+  defaultShowOption.value = "";
+  defaultShowOption.textContent = "Select a show...";
+  showSelect.appendChild(defaultShowOption);
+  shows.forEach((show) => {
+    const option = document.createElement("option");
+    option.value = show.id;
+    option.textContent = show.name;
+    showSelect.appendChild(option);
+  });
+  controls.appendChild(showSelect);
+
   // Episode select dropdown
   const select = document.createElement("select");
-  select.id = "episode-select";
-  select.style.padding = "0.5em";
-  select.style.fontSize = "1rem";
-  controls.appendChild(select);
+  if (episodes && episodes.length > 0) {
+    select.id = "episode-select";
+    select.style.padding = "0.5em";
+    select.style.fontSize = "1rem";
+    controls.appendChild(select);
+  }
 
   // Search input for text
   const input = document.createElement("input");
@@ -104,7 +121,9 @@ function setup(episodes) {
   episodes.forEach((episode, idx) => {
     const option = document.createElement("option");
     option.value = idx;
-    option.textContent = `S${pad(episode.season)}E${pad(episode.number)} - ${episode.name}`;
+    option.textContent = `S${pad(episode.season)}E${pad(episode.number)} - ${
+      episode.name
+    }`;
     select.appendChild(option);
   });
 
@@ -149,6 +168,17 @@ function setup(episodes) {
   update(episodes);
 }
 
+async function loadShows() {
+  const response = await fetch("https://api.tvmaze.com/shows");
+  if (!response.ok) throw new Error("Network response was not ok");
+  const shows = await response.json();
+  shows.sort((a, b) => a.name.localeCompare(b.name));
+  return shows;
+}
+
+console.error("Error fetching shows:", error);
+showMessage("Error loading shows. Please try again later.", true);
+
 // Fetch episodes from TVMaze API
 window.onload = function () {
   showMessage("Loading episodes...");
@@ -163,4 +193,10 @@ window.onload = function () {
     .catch((error) => {
       showMessage("Error loading episodes. Please try again later.", true);
     });
+
+  window.onload = async function () {
+    showMessage("Loading shows...");
+    const shows = await loadShows();
+    setup(shows);
+  };
 };
