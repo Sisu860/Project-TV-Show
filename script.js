@@ -193,6 +193,7 @@ function setup(episodes) {
 }
 
 async function loadShows() {
+  if (cache.shows) return cache.shows;
   const response = await fetch("https://api.tvmaze.com/shows");
   if (!response.ok) throw new Error("Network response was not ok");
   const shows = await response.json();
