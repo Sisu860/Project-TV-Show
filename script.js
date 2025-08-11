@@ -69,7 +69,7 @@ function showMessage(message, isError = false) {
   rootElem.appendChild(msg);
 }
 
-function setup(shows, episodes = null) {
+function setup(episodes) {
   // Create top controls container
   const controls = document.createElement("div");
   controls.style.display = "flex";
@@ -78,25 +78,50 @@ function setup(shows, episodes = null) {
   controls.style.gap = "1em";
   controls.style.margin = "1em";
 
-  // Show select dropdown
-  const showSelect = document.createElement("select");
-  showSelect.id = "show-select";
-  showSelect.style.padding = "0.5em";
-  showSelect.style.fontSize = "1rem";
+  // Show search input
+  const searchInput = document.createElement("input");
+  searchInput.type = "text";
+  searchInput.id = "show-search-input";
+  searchInput.placeholder = "Search shows...";
+  searchInput.style.padding = "0.5em";
+  searchInput.style.fontSize = "1rem";
+  controls.appendChild(searchInput);
 
-  const defaultShowOption = document.createElement("option");
-  defaultShowOption.value = "";
-  defaultShowOption.textContent = "Select a show...";
-  showSelect.appendChild(defaultShowOption);
+  showSearchInput.addEventListener("input", function (event) {
+    const searchTerm = event.target.value.toLowerCase().trim();
+    showSelect.innerHTML = ""; // Clear existing options
 
-  shows.forEach((show) => {
-    const option = document.createElement("option");
-    option.value = show.id;
-    option.textContent = show.name;
-    showSelect.appendChild(option);
+    showSelect.addEventListener("change", function (event) {
+      const selectedShowId = event.target.value;
+      if (selectedShowId === "") {
+        const rootElem = document.getElementById("root");
+        rootElem.innerHTML = "";
+        return;
+      }
+      loadEpisodesForShow(selectedShowId);
+    });
+
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Select a show...";
+    showSelect.appendChild(defaultOption);
+
+    const defaultShowOption = document.createElement("option");
+    defaultShowOption.value = "";
+    defaultShowOption.textContent = "Select a show...";
+    showSelect.appendChild(defaultShowOption);
+
+    const filteredShows = episodes.filter((show) =>
+      show.name.toLowerCase().includes(searchTerm)
+    );
+
+    filteredShows.forEach((show) => {
+      const option = document.createElement("option");
+      option.value = show.id;
+      option.textContent = show.name;
+      showSelect.appendChild(option);
+    });
   });
-  controls.appendChild(showSelect);
-
   // Only add episode-related controls if episodes exist
   if (episodes && episodes.length > 0) {
     // Episode select dropdown
@@ -105,22 +130,6 @@ function setup(shows, episodes = null) {
     select.style.padding = "0.5em";
     select.style.fontSize = "1rem";
     controls.appendChild(select);
-
-    // Search input for text
-    const input = document.createElement("input");
-    input.type = "text";
-    input.id = "search-input";
-    input.placeholder = "Search episodes...";
-    input.style.padding = "0.5em";
-    input.style.width = "250px";
-    input.style.fontSize = "1rem";
-    controls.appendChild(input);
-
-    // Populate episode select options
-    const defaultOption = document.createElement("option");
-    defaultOption.value = "";
-    defaultOption.textContent = "Select an episode...";
-    select.appendChild(defaultOption);
 
     episodes.forEach((episode, idx) => {
       const option = document.createElement("option");
@@ -185,6 +194,21 @@ async function loadShows() {
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
   return shows;
+}
+async function loadEpisodesForShow(showId) {
+  showMessage("Loading episodes...");
+  try {
+    const response = await fetch(
+      `https://api.tvmaze.com/shows/${showId}/episodes`
+    );
+    if (!response.ok) throw new Error("Network response was not ok");
+    const episodes = await response.json();
+
+    const shows = await loadShows();
+    setup(shows, episodes);
+  } catch (error) {
+    showMessage("Error loading episodes. Please try again later.", true);
+  }
 }
 
 window.onload = async function () {
