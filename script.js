@@ -100,43 +100,65 @@ function setup(shows, episodes = null) {
   searchInput.style.fontSize = "1rem";
   controls.appendChild(searchInput);
 
-  showSearchInput.addEventListener("input", function (event) {
-    const searchTerm = event.target.value.toLowerCase().trim();
+  // Show select dropdown
+  const showSelect = document.createElement("select");
+  showSelect.id = "show-select";
+  showSelect.style.padding = "0.5em";
+  showSelect.style.fontSize = "1rem";
+  controls.appendChild(showSelect);
+
+  // Populate show select with all shows initially
+  function populateShowSelect(showsToDisplay) {
     showSelect.innerHTML = ""; // Clear existing options
-
-    showSelect.addEventListener("change", function (event) {
-      const selectedShowId = event.target.value;
-      if (selectedShowId === "") {
-        const rootElem = document.getElementById("root");
-        rootElem.innerHTML = "";
-        return;
-      }
-      loadEpisodesForShow(selectedShowId);
-    });
-
+    
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
     defaultOption.textContent = "Select a show...";
     showSelect.appendChild(defaultOption);
 
-    const defaultShowOption = document.createElement("option");
-    defaultShowOption.value = "";
-    defaultShowOption.textContent = "Select a show...";
-    showSelect.appendChild(defaultShowOption);
-
-    const filteredShows = episodes.filter((show) =>
-      show.name.toLowerCase().includes(searchTerm)
-    );
-
-    filteredShows.forEach((show) => {
+    showsToDisplay.forEach((show) => {
       const option = document.createElement("option");
       option.value = show.id;
       option.textContent = show.name;
       showSelect.appendChild(option);
     });
+  }
+
+  // Initial population with all shows
+  populateShowSelect(shows);
+
+  searchInput.addEventListener("input", function (event) {
+    const searchTerm = event.target.value.toLowerCase().trim();
+    
+    const filteredShows = shows.filter((show) =>
+      show.name.toLowerCase().includes(searchTerm)
+    );
+    
+    populateShowSelect(filteredShows);
   });
+
+  showSelect.addEventListener("change", function (event) {
+    const selectedShowId = event.target.value;
+    if (selectedShowId === "") {
+      const rootElem = document.getElementById("root");
+      rootElem.innerHTML = "";
+      return;
+    }
+    loadEpisodesForShow(selectedShowId);
+  });
+
   // Only add episode-related controls if episodes exist
   if (episodes && episodes.length > 0) {
+    // Episode search input
+    const episodeSearchInput = document.createElement("input");
+    episodeSearchInput.type = "text";
+    episodeSearchInput.id = "episode-search-input";
+    episodeSearchInput.placeholder = "Search episodes...";
+    episodeSearchInput.style.padding = "0.5em";
+    episodeSearchInput.style.width = "250px";
+    episodeSearchInput.style.fontSize = "1rem";
+    controls.appendChild(episodeSearchInput);
+
     // Episode select dropdown
     const select = document.createElement("select");
     select.id = "episode-select";
@@ -144,14 +166,24 @@ function setup(shows, episodes = null) {
     select.style.fontSize = "1rem";
     controls.appendChild(select);
 
-    episodes.forEach((episode, idx) => {
-      const option = document.createElement("option");
-      option.value = idx;
-      option.textContent = `S${pad(episode.season)}E${pad(episode.number)} - ${
-        episode.name
-      }`;
-      select.appendChild(option);
-    });
+    // Populate episode select options
+    function populateEpisodeSelect(episodesToDisplay) {
+      select.innerHTML = "";
+      
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = "Select an episode...";
+      select.appendChild(defaultOption);
+
+      episodesToDisplay.forEach((episode, idx) => {
+        const option = document.createElement("option");
+        option.value = idx;
+        option.textContent = `S${pad(episode.season)}E${pad(episode.number)} - ${episode.name}`;
+        select.appendChild(option);
+      });
+    }
+
+    populateEpisodeSelect(episodes);
 
     // Match count
     const matchCount = document.createElement("span");
@@ -169,7 +201,7 @@ function setup(shows, episodes = null) {
       matchCount.textContent = `Displaying ${filteredEpisodes.length}/${episodes.length} episodes.`;
     }
 
-    input.addEventListener("input", function (event) {
+    episodeSearchInput.addEventListener("input", function (event) {
       const searchTerm = event.target.value.toLowerCase().trim();
       const filteredEpisodes = episodes.filter(
         (episode) =>
@@ -188,7 +220,7 @@ function setup(shows, episodes = null) {
       }
       const selectedEpisode = [episodes[selectedIndex]];
       update(selectedEpisode);
-      input.value = "";
+      episodeSearchInput.value = "";
     });
 
     update(episodes);
