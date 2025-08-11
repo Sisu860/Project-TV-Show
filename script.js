@@ -75,7 +75,14 @@ function showMessage(message, isError = false) {
   rootElem.appendChild(msg);
 }
 
-function setup(episodes) {
+function setup(shows, episodes = null) {
+  // Remove existing controls if they exist
+  const existingControls = document.querySelector(
+    "div[style*='display: flex']"
+  );
+  if (existingControls) {
+    existingControls.remove();
+  }
   // Create top controls container
   const controls = document.createElement("div");
   controls.style.display = "flex";
@@ -200,9 +207,15 @@ async function loadShows() {
   shows.sort((a, b) =>
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
+  cache.shows = shows; // Cache the shows
   return shows;
 }
 async function loadEpisodesForShow(showId) {
+  if (cache.episodes[showId]) {
+    makePageForEpisodes(cache.episodes[showId]);
+    setup(shows, cache.episodes[showId]);
+    return;
+  }
   showMessage("Loading episodes...");
   try {
     const response = await fetch(
@@ -211,6 +224,7 @@ async function loadEpisodesForShow(showId) {
     if (!response.ok) throw new Error("Network response was not ok");
     const episodes = await response.json();
 
+    cache.episodes[showId] = episodes; // Cache the episodes for this show
     const shows = await loadShows();
     setup(shows, episodes);
   } catch (error) {
