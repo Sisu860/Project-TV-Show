@@ -83,15 +83,18 @@ function setup(shows, episodes = null) {
   if (existingControls) {
     existingControls.remove();
   }
-  // Create top controls container
+
+  // ==================== SHOW CONTROLS ====================
+  // Create top controls container for SHOW selection
   const controls = document.createElement("div");
+  controls.className = "show-controls";
   controls.style.display = "flex";
   controls.style.justifyContent = "flex-start";
   controls.style.alignItems = "center";
   controls.style.gap = "1em";
   controls.style.margin = "1em";
 
-  // Show search input
+  // Show search input - for searching SHOWS
   const searchInput = document.createElement("input");
   searchInput.type = "text";
   searchInput.id = "show-search-input";
@@ -100,17 +103,17 @@ function setup(shows, episodes = null) {
   searchInput.style.fontSize = "1rem";
   controls.appendChild(searchInput);
 
-  // Show select dropdown
+  // Show select dropdown - for selecting a SHOW
   const showSelect = document.createElement("select");
   showSelect.id = "show-select";
   showSelect.style.padding = "0.5em";
   showSelect.style.fontSize = "1rem";
   controls.appendChild(showSelect);
 
-  // Populate show select with all shows initially
+  // Function to populate show dropdown with SHOWS
   function populateShowSelect(showsToDisplay) {
     showSelect.innerHTML = ""; // Clear existing options
-    
+
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
     defaultOption.textContent = "Select a show...";
@@ -127,16 +130,18 @@ function setup(shows, episodes = null) {
   // Initial population with all shows
   populateShowSelect(shows);
 
+  // Event listener for SHOW search
   searchInput.addEventListener("input", function (event) {
     const searchTerm = event.target.value.toLowerCase().trim();
-    
+
     const filteredShows = shows.filter((show) =>
       show.name.toLowerCase().includes(searchTerm)
     );
-    
+
     populateShowSelect(filteredShows);
   });
 
+  // Event listener for SHOW selection
   showSelect.addEventListener("change", function (event) {
     const selectedShowId = event.target.value;
     if (selectedShowId === "") {
@@ -147,9 +152,11 @@ function setup(shows, episodes = null) {
     loadEpisodesForShow(selectedShowId);
   });
 
+  // ==================== EPISODE CONTROLS ====================
+  // ==================== EPISODE CONTROLS ====================
   // Only add episode-related controls if episodes exist
   if (episodes && episodes.length > 0) {
-    // Episode search input
+    // Episode search input - for searching EPISODES within the selected show
     const episodeSearchInput = document.createElement("input");
     episodeSearchInput.type = "text";
     episodeSearchInput.id = "episode-search-input";
@@ -159,33 +166,35 @@ function setup(shows, episodes = null) {
     episodeSearchInput.style.fontSize = "1rem";
     controls.appendChild(episodeSearchInput);
 
-    // Episode select dropdown
-    const select = document.createElement("select");
-    select.id = "episode-select";
-    select.style.padding = "0.5em";
-    select.style.fontSize = "1rem";
-    controls.appendChild(select);
+    // Episode select dropdown - for selecting individual EPISODES
+    const episodeSelect = document.createElement("select");
+    episodeSelect.id = "episode-select";
+    episodeSelect.style.padding = "0.5em";
+    episodeSelect.style.fontSize = "1rem";
+    controls.appendChild(episodeSelect);
 
-    // Populate episode select options
+    // Function to populate episode dropdown with EPISODES
     function populateEpisodeSelect(episodesToDisplay) {
-      select.innerHTML = "";
-      
+      episodeSelect.innerHTML = "";
+
       const defaultOption = document.createElement("option");
       defaultOption.value = "";
       defaultOption.textContent = "Select an episode...";
-      select.appendChild(defaultOption);
+      episodeSelect.appendChild(defaultOption);
 
       episodesToDisplay.forEach((episode, idx) => {
         const option = document.createElement("option");
         option.value = idx;
-        option.textContent = `S${pad(episode.season)}E${pad(episode.number)} - ${episode.name}`;
-        select.appendChild(option);
+        option.textContent = `S${pad(episode.season)}E${pad(
+          episode.number
+        )} - ${episode.name}`;
+        episodeSelect.appendChild(option);
       });
     }
 
     populateEpisodeSelect(episodes);
 
-    // Match count
+    // Episode match count - shows how many EPISODES are displayed
     const matchCount = document.createElement("span");
     matchCount.id = "match-count";
     matchCount.style.marginLeft = "1em";
@@ -196,11 +205,13 @@ function setup(shows, episodes = null) {
     const rootElem = document.getElementById("root");
     rootElem.parentNode.insertBefore(controls, rootElem);
 
-    function update(filteredEpisodes) {
+    // Function to update episode display and count
+    function updateEpisodeDisplay(filteredEpisodes) {
       makePageForEpisodes(filteredEpisodes);
       matchCount.textContent = `Displaying ${filteredEpisodes.length}/${episodes.length} episodes.`;
     }
 
+    // Event listener for EPISODE search
     episodeSearchInput.addEventListener("input", function (event) {
       const searchTerm = event.target.value.toLowerCase().trim();
       const filteredEpisodes = episodes.filter(
@@ -208,22 +219,24 @@ function setup(shows, episodes = null) {
           episode.name.toLowerCase().includes(searchTerm) ||
           episode.summary?.toLowerCase().includes(searchTerm)
       );
-      update(filteredEpisodes);
-      select.value = "";
+      updateEpisodeDisplay(filteredEpisodes);
+      episodeSelect.value = "";
     });
 
-    select.addEventListener("change", function (event) {
+    // Event listener for EPISODE selection
+    episodeSelect.addEventListener("change", function (event) {
       const selectedIndex = event.target.value;
       if (selectedIndex === "") {
-        update(episodes);
+        updateEpisodeDisplay(episodes);
         return;
       }
       const selectedEpisode = [episodes[selectedIndex]];
-      update(selectedEpisode);
+      updateEpisodeDisplay(selectedEpisode);
       episodeSearchInput.value = "";
     });
 
-    update(episodes);
+    // Initially display all episodes
+    updateEpisodeDisplay(episodes);
   } else {
     // If no episodes, just add controls without episode-specific elements
     const rootElem = document.getElementById("root");
@@ -244,6 +257,7 @@ async function loadShows() {
 }
 async function loadEpisodesForShow(showId) {
   if (cache.episodes[showId]) {
+    const shows = await loadShows(); // Get shows from cache
     makePageForEpisodes(cache.episodes[showId]);
     setup(shows, cache.episodes[showId]);
     return;
