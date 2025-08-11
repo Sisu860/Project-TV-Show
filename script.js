@@ -1,3 +1,9 @@
+// Cache for fetched data to avoid duplicate requests
+const cache = {
+  shows: null,
+  episodes: {},
+};
+
 function pad(num) {
   return num.toString().padStart(2, "0");
 }
