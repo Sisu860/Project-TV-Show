@@ -152,12 +152,13 @@ function setup(shows, episodes = null) {
 
   // Function to populate episode dropdown
   function populateEpisodeSelect(episodesToDisplay) {
+    console.log("Populating episode dropdown with:", episodesToDisplay?.length || 0, "episodes");
     episodeSelect.innerHTML = "";
 
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
     defaultOption.textContent =
-      episodes && episodes.length > 0
+      episodesToDisplay && episodesToDisplay.length > 0
         ? "Select an episode..."
         : "No episodes available";
     episodeSelect.appendChild(defaultOption);
@@ -171,6 +172,7 @@ function setup(shows, episodes = null) {
         )} - ${episode.name}`;
         episodeSelect.appendChild(option);
       });
+      console.log("Added", episodesToDisplay.length, "episodes to dropdown");
     }
   }
 
@@ -257,12 +259,16 @@ async function loadShows() {
   return shows;
 }
 async function loadEpisodesForShow(showId) {
+  console.log("Loading episodes for show ID:", showId);
+  
   if (cache.episodes[showId]) {
+    console.log("Episodes found in cache:", cache.episodes[showId].length, "episodes");
     const shows = await loadShows(); // Get shows from cache
     makePageForEpisodes(cache.episodes[showId]);
     setup(shows, cache.episodes[showId]);
     return;
   }
+  
   showMessage("Loading episodes...");
   try {
     const response = await fetch(
@@ -270,11 +276,15 @@ async function loadEpisodesForShow(showId) {
     );
     if (!response.ok) throw new Error("Network response was not ok");
     const episodes = await response.json();
+    
+    console.log("Loaded episodes from API:", episodes.length, "episodes");
+    console.log("First episode:", episodes[0]);
 
     cache.episodes[showId] = episodes; // Cache the episodes for this show
     const shows = await loadShows();
     setup(shows, episodes);
   } catch (error) {
+    console.error("Error loading episodes:", error);
     showMessage("Error loading episodes. Please try again later.", true);
   }
 }
