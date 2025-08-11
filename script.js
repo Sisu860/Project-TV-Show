@@ -76,8 +76,14 @@ function showMessage(message, isError = false) {
 }
 
 function setup(shows, episodes = null) {
-  console.log("Setup called with:", shows.length, "shows and", episodes?.length || 0, "episodes");
-  
+  console.log(
+    "Setup called with:",
+    shows.length,
+    "shows and",
+    episodes?.length || 0,
+    "episodes"
+  );
+
   // Remove existing controls if they exist
   const existingControls = document.querySelector(
     "div[style*='display: flex']"
@@ -154,7 +160,11 @@ function setup(shows, episodes = null) {
 
   // Function to populate episode dropdown
   function populateEpisodeSelect(episodesToDisplay) {
-    console.log("Populating episode dropdown with:", episodesToDisplay?.length || 0, "episodes");
+    console.log(
+      "Populating episode dropdown with:",
+      episodesToDisplay?.length || 0,
+      "episodes"
+    );
     episodeSelect.innerHTML = "";
 
     const defaultOption = document.createElement("option");
@@ -239,11 +249,16 @@ function setup(shows, episodes = null) {
   // Episode selection event
   episodeSelect.addEventListener("change", function (event) {
     const selectedIndex = event.target.value;
+    console.log("Episode selected, index:", selectedIndex);
+
     if (selectedIndex === "" || !episodes || episodes.length === 0) {
+      console.log("No valid episode selected, showing all episodes");
       updateDisplay(episodes);
       return;
     }
-    const selectedEpisode = [episodes[selectedIndex]];
+
+    const selectedEpisode = [episodes[parseInt(selectedIndex)]];
+    console.log("Selected episode:", selectedEpisode[0]?.name);
     updateDisplay(selectedEpisode);
     unifiedSearchInput.value = "";
   });
@@ -260,17 +275,53 @@ async function loadShows() {
   cache.shows = shows; // Cache the shows
   return shows;
 }
+// Test function to validate episode data structure
+function validateEpisodeData(episodes) {
+  if (!episodes || !Array.isArray(episodes)) {
+    console.error("Episodes is not a valid array:", episodes);
+    return false;
+  }
+
+  const firstEpisode = episodes[0];
+  if (!firstEpisode) {
+    console.error("No episodes in array");
+    return false;
+  }
+
+  const requiredFields = ["name", "season", "number"];
+  const missingFields = requiredFields.filter(
+    (field) => !firstEpisode.hasOwnProperty(field)
+  );
+
+  if (missingFields.length > 0) {
+    console.error("Missing required fields in episode data:", missingFields);
+    return false;
+  }
+
+  console.log("Episode data validation passed. Sample episode:", {
+    name: firstEpisode.name,
+    season: firstEpisode.season,
+    number: firstEpisode.number,
+  });
+
+  return true;
+}
+
 async function loadEpisodesForShow(showId) {
   console.log("Loading episodes for show ID:", showId);
-  
+
   if (cache.episodes[showId]) {
-    console.log("Episodes found in cache:", cache.episodes[showId].length, "episodes");
+    console.log(
+      "Episodes found in cache:",
+      cache.episodes[showId].length,
+      "episodes"
+    );
     const shows = await loadShows(); // Get shows from cache
     makePageForEpisodes(cache.episodes[showId]);
     setup(shows, cache.episodes[showId]);
     return;
   }
-  
+
   showMessage("Loading episodes...");
   try {
     const response = await fetch(
@@ -278,9 +329,13 @@ async function loadEpisodesForShow(showId) {
     );
     if (!response.ok) throw new Error("Network response was not ok");
     const episodes = await response.json();
-    
+
     console.log("Loaded episodes from API:", episodes.length, "episodes");
-    console.log("First episode:", episodes[0]);
+
+    // Validate episode data structure
+    if (!validateEpisodeData(episodes)) {
+      throw new Error("Invalid episode data structure");
+    }
 
     cache.episodes[showId] = episodes; // Cache the episodes for this show
     const shows = await loadShows();
