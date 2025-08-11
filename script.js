@@ -76,6 +76,8 @@ function showMessage(message, isError = false) {
 }
 
 function setup(shows, episodes = null) {
+  console.log("Setup called with:", shows.length, "shows and", episodes?.length || 0, "episodes");
+  
   // Remove existing controls if they exist
   const existingControls = document.querySelector(
     "div[style*='display: flex']"
