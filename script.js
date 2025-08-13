@@ -67,6 +67,14 @@ function makeShowsListing(shows, onShowClick) {
   const oldControls = document.getElementById("controls");
   if (oldControls) oldControls.remove();
 
+  // Show count
+  const showCount = document.createElement("div");
+  showCount.textContent = `Total shows: ${shows.length}`;
+  showCount.style.margin = "1em";
+  showCount.style.fontWeight = "bold";
+  showCount.style.color = "#ffd700";
+  rootElem.appendChild(showCount);
+
   // Show search input
   const searchDiv = document.createElement("div");
   searchDiv.style.display = "flex";
